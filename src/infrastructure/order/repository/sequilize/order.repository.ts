@@ -4,7 +4,7 @@ import OrderRepositoryInterface from '../../../../domain/checkout/repository/ord
 import OrderItemModel from './order-item.model';
 import OrderModel from './order.model';
 
-export default class OrderRepository {
+export default class OrderRepository implements OrderRepositoryInterface {
   async create(entity: Order): Promise<void> {
     await OrderModel.create(
       {
@@ -65,5 +65,19 @@ export default class OrderRepository {
     });
 
     return new Order(order.id, order.customer_id, orderItems);
+  }
+
+  async findAll(): Promise<Order[]> {
+    const orders = await OrderModel.findAll({
+      include: [{ model: OrderItemModel }],
+    });
+
+    return orders.map((model) => {
+      const orderItems = model.items.map((orderItem) => {
+        return new OrderItem(orderItem.id, orderItem.name, orderItem.price, orderItem.product_id, orderItem.quantity);
+      });
+
+      return new Order(model.id, model.customer_id, orderItems);
+    });
   }
 }
