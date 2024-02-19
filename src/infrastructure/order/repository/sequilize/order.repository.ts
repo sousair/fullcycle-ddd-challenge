@@ -49,4 +49,21 @@ export default class OrderRepository {
       }
     );
   }
+
+  async find(id: string): Promise<Order> {
+    const order = await OrderModel.findOne({
+      where: { id },
+      include: [{ model: OrderItemModel }],
+    });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    const orderItems = order.items.map((orderItem) => {
+      return new OrderItem(orderItem.id, orderItem.name, orderItem.price, orderItem.product_id, orderItem.quantity);
+    });
+
+    return new Order(order.id, order.customer_id, orderItems);
+  }
 }
